@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DailyChill</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.js"></script>
+	
+	<script src="media/sketch/sketch2.js"></script>
+	
+	<style type="text/css">
+        html, body {
+            height: 100%;
+			width: 100%;
+            margin: 0;
+            background-color: black;
+        }
+
+        #wrapper {
+            min-height: 100%;
+			min-width: 100%;
+			background-color: #707070;
+			z-index: 3;
+        }
+		
+		#myVideo {
+		  position: absolute;
+		  right: 0;
+		  bottom: 0;
+		  min-width: 100%; 
+		  min-height: 100%;
+		  z-index: 1;
+		}
+		
+		.blackout {
+			position:absolute;
+			min-height: 100%;
+			min-width: 100%;
+			background-color: #000000;
+			 z-index: 100;
+		}
+		
+		.content {
+		  position: absolute;
+		  width: 300px;
+		  height: 300px;
+		  z-index: 15;
+		  top: 50%;
+		  left: 50%;
+		  margin: -100px 0 0 -150px;
+		  background: rgba(255, 0, 0, 0);
+		}
+		
+		#canvas {
+			position: absolute;
+			z-index: 2;
+			-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=20)";       /* IE 8 */
+			filter: alpha(opacity=20);  /* IE 5-7 */
+			-moz-opacity: 0.2;          /* Netscape */
+			-khtml-opacity: 0.2;        /* Safari 1.x */
+			opacity: 0.2; 
+			
+			
+			bottom: 0;
+			width: 100%;
+			
+		}
+    </style>
+    <!--[if lte IE 6]>
+    <style type="text/css">
+        #container {
+            height: 100%;
+        }
+    </style>
+    <![endif]-->
+  </head>
+  <body>
+	 <div id="wrapper">
+		<video autoplay muted loop id="myVideo">
+			  <source src="media/video/2.mp4" type="video/mp4">
+		</video>
+		<iframe src="media/audio/silence.mp3" allow="autoplay" id="audio" style="display:none"></iframe>
+		<audio id="player" autoplay loop>
+		    <source src="media/audio/2.mp3" type="audio/mp3">
+		</audio>
+		<div class="blackout" id="fade"></div>
+		<div  id="canvas"></div>
+		<div class="content" id="content">
+		
+				<img src="media/image/logo1.png" width="100%" height="100%"/>
+		</div>  
+ 
+	
+  </body>
+  
+  <script>
+	 var context;
+  
+	$( document ).ready(function() {
+		$("#canvas").hide();
+		$("#content").hide();
+		
+		$("#fade").fadeOut(10000);
+		$("#canvas").fadeIn(20000);
+		$("#content").fadeIn(50000);
+		console.log("done");
+		
+	});
+	
+	window.onload = function() {
+	   context = new AudioContext();
+	   document.body.addEventListener('mousemove', function() {
+		  context.resume().then(() => {
+			console.log('Playback resumed successfully');
+		  });
+		});
+	}
+	
+	
+
+  </script>
+</html>
