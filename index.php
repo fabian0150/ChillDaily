@@ -409,6 +409,10 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 				 loadPlayerInfo();
 				 
 			});
+			
+			$.getScript("media/sketch/" + player_info.sketch_path, function() {
+			   //console.log("Sketch loaded.");
+			});
 		
 			var btn_mute 	= document.getElementById("btn_mute");
 			if(muted) {
