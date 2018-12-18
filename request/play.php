@@ -3,9 +3,9 @@
 	$return_arr = array();
 	session_start();
 	$servername = "localhost";
-	$username = "dailychill_user";
-	$password = "h!79i5kF";
-	$dbname = "dailychill";
+	$username = "";
+	$password = "";
+	$dbname = "";
 	
 	
 	$video_path = "";
