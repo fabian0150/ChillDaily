@@ -584,7 +584,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 		$("#control").fadeIn(5000);
 
 		
-		$("#content-logo").fadeOut(5000);
+		$("#content-logo").fadeOut(10000);
 		$("#fade").fadeOut(15000);
 		
 		$("#canvas").fadeIn(20000);

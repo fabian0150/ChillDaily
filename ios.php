@@ -269,7 +269,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 				<td><img src="media/image/play.png" class="ctrl-img"  onClick="startStopSong();" id="btn_stopPlay"/></td>
 				<td><img src="media/image/right.png" class="ctrl-img" onClick="changeSong(1);"/></td>
 				<td><img src="media/image/unmuted.png" class="ctrl-img" onClick="muteSong();" id="btn_mute"/></td>
-				<td><div class="tooltip"><img src="media/image/random.png" class="ctrl-img" onClick="loadPlayerInfo();" id="btn_random"/> <span class="tooltiptext">New Random Song</span></div></td>
+				<td><div class="tooltip"><img src="media/image/random.png" class="ctrl-img" onClick="loadPlayerInfo();" id="btn_random"/> 						<span class="tooltiptext">New Random Song</span></div></td>
 			  </tr>
 			</table>
 			
