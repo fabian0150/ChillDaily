@@ -524,11 +524,11 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 	}
 	
 	function changeVideo() {
-		//$("#fade").fadeIn(5000);
+		
 		no_video = false;
 		var found = false;
 		var rand_id = getRandomInt(1, player_info.video_count);
-		var path = "media/video/" + rand_id + ".mp4";
+		var path = "request/video.php?id=" + rand_id;
 		if(played_videos.length >= video_count - 1) {
 			played_videos = [];
 		}
@@ -536,7 +536,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 		do {
 			found = false;
 			rand_id = getRandomInt(1, player_info.video_count);
-			path = "media/video/" + rand_id + ".mp4";
+			path = "request/video.php?id=" + rand_id;
 			
 			var i;
 			for (i = 0; i < played_videos.length; i++) { 
@@ -547,14 +547,40 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 		}while (found == true);
 		
 		
-		played_videos.push(rand_id);
-		player_video.pause();
+		$.ajax({url: path}).done(function( json ) {
+			var json_obj = JSON.parse(JSON.stringify(json));
+			player_info = {
+				video_id: json_obj[0].video_id,
+				video_path: json_obj[0].video_path,
+				timer_video: json_obj[0].timer_video,
+				video_link: json_obj[0].video_link,
+				video_name: json_obj[0].video_name,
+				video_count: json_obj[0].video_count
+			}
+			video_count = player_info.video_count;
+
+			txt_video_name.innerHTML = player_info.video_name;
 		
-		player_video.setAttribute('src', path); 
-	    player_info.video_path = rand_id + ".mp4";
-	    player_video.load();
-	    player_video.play();
-		//$("#fade").fadeOut(5000);
+		});
+			
+		clearInterval(video_interval);
+		player_video.setAttribute('src', "media/video/" + player_info.video_path);
+		if(player_info.timer_video <= player_info.timer_music) {
+			var timer_video_ms = player_info.timer_video * 1000;
+			video_interval = setInterval(changeVideo, timer_video_ms);
+		}
+		player_video.addEventListener("ended", function(){
+			 player_video.currentTime = 0;
+			 changeVideo();
+		});
+		
+		played_videos.push(player_info.video_id);
+		player_video.pause();
+		player_video.load();
+		player_video.play();
+
+		$("#video-title").fadeIn(10000);
+		$("#video-title").fadeOut(10000);
 	}
 	
 	function openMusic() {
