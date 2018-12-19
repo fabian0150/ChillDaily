@@ -4,8 +4,13 @@
 	
 	require_once("Mobile_Detect.php");
 	$detect = new Mobile_Detect;
-	if ( $detect->isMobile() ) {
-		header('Location: mobile.php');
+	if ( !$detect->isMobile() ) {
+		header('Location: index.php');
+		exit();
+	}
+	
+	if( $detect->isiOS() ){
+		header('Location: ios.php');
 		exit();
 	}
 ?>
@@ -21,7 +26,7 @@
 	
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.js"></script>
 	<link href="https://fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet">
-	
+
 	
 	<style type="text/css">
         html, body {
@@ -78,21 +83,21 @@
 		
 		.content-logo {
 		  position: absolute;
-		  width: 1000px;
-		  height: 1000px;
+		  top: 0;
+		  left: 0;
+		  width: 100%;
+		  height: 100%;
 		  z-index: 10;
-		  top: 50%;
-		  left: 50%;
-		  margin: -500px 0 0 -500px;
+
+		
 		  background: rgba(255, 0, 0, 0);
 		  z-index: 26;
 		  
-		}
-		
+		}		
 		.music-title {
 			position:fixed;
 			top:50px;
-			left:100px;
+			left:10px;
 			z-index: 10;
 			cursor: pointer;
 			padding: 15px;
@@ -103,7 +108,7 @@
 		.video-title {
 			position:fixed;
 			top:60%;
-			left:100px;
+			left:10px;
 			z-index: 10;
 			cursor: pointer;
 			padding: 15px;
@@ -132,14 +137,6 @@
 			transform: translate(-50%, -50%);
 			margin: 0 auto;
 			z-index: 26;
-			-webkit-transition: opacity 5s;
-			-moz-transition: opacity 5s;
-			transition: opacity 5s;
-			opacity: 0.25;
-			
-		}
-		
-		.control:hover {
 			opacity: 1;
 			background-color: #ffffff21;
 			border-radius: 25px;
@@ -280,13 +277,12 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 				<th></th>
 				<th></th>
 				<th></th>
-				<th></th>
 			  </tr>
 			 <tr> 
 				<td><div class="tooltip"><img src="media/image/video.png" class="ctrl-img"  onClick="changeVideo();" id="btn_video"/> <span class="tooltiptext">New Random Background</span></div></td>
-				<td><img src="media/image/pause.png" class="ctrl-img"  onClick="startStopSong();" id="btn_stopPlay"/></td>
 				<td><img src="media/image/left.png" class="ctrl-img" onClick="changeSong(-1);" /></td>
-				<td><div class="tooltip"><input type="range" id="volumeRange"  value="1" min="0" max="1"  step="0.1"> <span class="tooltiptext">Volume</span></div></td> 
+				<td><img src="media/image/pause.png" class="ctrl-img"  onClick="startStopSong();" id="btn_stopPlay"/></td>
+				
 				<td><img src="media/image/right.png" class="ctrl-img" onClick="changeSong(1);"/></td>
 				<td><img src="media/image/unmuted.png" class="ctrl-img" onClick="muteSong();" id="btn_mute"/></td>
 				<td><div class="tooltip"><img src="media/image/random.png" class="ctrl-img" onClick="loadPlayerInfo();" id="btn_random"/> <span class="tooltiptext">New Random Song</span></div></td>
@@ -296,6 +292,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 			
 			
 		</div>
+		
 		
   </body>
   
@@ -330,11 +327,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 		
 		
 	});
-	
-	$(document).on('input change', '#volumeRange', function() {
-		changeVolume($(this).val());
-	});;
-	
+		
 	function loadPlayerInfo(id) {
 		
 		if (typeof audio_player != 'undefined') {
@@ -505,17 +498,6 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 		}		
 	}
 	
-	function changeVolume(vol) {
-		volume = vol;
-		audio_player.volume = volume;
-		if(volume <= 0) {
-			btn_mute.setAttribute('src', "media/image/muted.png");
-			audio_player.muted = true;
-		} else {
-			btn_mute.setAttribute('src', "media/image/unmuted.png");
-			audio_player.muted = false;
-		}
-	}
 	
 	function changeVideo() {
 		
@@ -599,10 +581,8 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 		$("#music-title").hide();
 		$("#video-title").hide();
 		$("#control").hide();
-
-		
 		$("#control").fadeIn(5000);
-		
+
 		
 		$("#content-logo").fadeOut(5000);
 		$("#fade").fadeOut(15000);

@@ -4,10 +4,11 @@
 	
 	require_once("Mobile_Detect.php");
 	$detect = new Mobile_Detect;
-	if ( $detect->isMobile() ) {
-		header('Location: mobile.php');
+	if ( !$detect->isMobile() ) {
+		header('Location: index.php');
 		exit();
 	}
+	
 ?>
 
 <!DOCTYPE html>
@@ -21,7 +22,7 @@
 	
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.js"></script>
 	<link href="https://fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet">
-	
+
 	
 	<style type="text/css">
         html, body {
@@ -45,14 +46,7 @@
 			z-index: 3;
         }
 		
-		#player_video {
-		  position: absolute;
-		  right: 0;
-		  bottom: 0;
-		  min-width: 100%; 
-		  min-height: 100%;
-		  z-index: 1;
-		}
+		
 		
 		.blackout {
 			position:fixed;
@@ -78,12 +72,13 @@
 		
 		.content-logo {
 		  position: absolute;
-		  width: 1000px;
-		  height: 1000px;
+		  top: 0;
+		  left: 0;
+		  width: 100%;
+		  height: 100%;
 		  z-index: 10;
-		  top: 50%;
-		  left: 50%;
-		  margin: -500px 0 0 -500px;
+
+		
 		  background: rgba(255, 0, 0, 0);
 		  z-index: 26;
 		  
@@ -92,7 +87,7 @@
 		.music-title {
 			position:fixed;
 			top:50px;
-			left:100px;
+			left:10px;
 			z-index: 10;
 			cursor: pointer;
 			padding: 15px;
@@ -103,7 +98,7 @@
 		.video-title {
 			position:fixed;
 			top:60%;
-			left:100px;
+			left:10px;
 			z-index: 10;
 			cursor: pointer;
 			padding: 15px;
@@ -132,14 +127,6 @@
 			transform: translate(-50%, -50%);
 			margin: 0 auto;
 			z-index: 26;
-			-webkit-transition: opacity 5s;
-			-moz-transition: opacity 5s;
-			transition: opacity 5s;
-			opacity: 0.25;
-			
-		}
-		
-		.control:hover {
 			opacity: 1;
 			background-color: #ffffff21;
 			border-radius: 25px;
@@ -267,10 +254,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 			<h2 id="txt_interpret"></h2>
 		</div>
 		
-		<div class="video-title" id="video-title" onClick="openVideo();">
-			<p>Video now...</p>
-			<h1 id="txt_video_name"></h1>
-		</div>
+		
 		<div class="control" id="control">
 			<table id="control-table">
 			  <tr>
@@ -279,44 +263,35 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 				<th></th> 
 				<th></th>
 				<th></th>
-				<th></th>
-				<th></th>
 			  </tr>
 			 <tr> 
-				<td><div class="tooltip"><img src="media/image/video.png" class="ctrl-img"  onClick="changeVideo();" id="btn_video"/> <span class="tooltiptext">New Random Background</span></div></td>
-				<td><img src="media/image/pause.png" class="ctrl-img"  onClick="startStopSong();" id="btn_stopPlay"/></td>
 				<td><img src="media/image/left.png" class="ctrl-img" onClick="changeSong(-1);" /></td>
-				<td><div class="tooltip"><input type="range" id="volumeRange"  value="1" min="0" max="1"  step="0.1"> <span class="tooltiptext">Volume</span></div></td> 
+				<td><img src="media/image/play.png" class="ctrl-img"  onClick="startStopSong();" id="btn_stopPlay"/></td>
 				<td><img src="media/image/right.png" class="ctrl-img" onClick="changeSong(1);"/></td>
 				<td><img src="media/image/unmuted.png" class="ctrl-img" onClick="muteSong();" id="btn_mute"/></td>
 				<td><div class="tooltip"><img src="media/image/random.png" class="ctrl-img" onClick="loadPlayerInfo();" id="btn_random"/> <span class="tooltiptext">New Random Song</span></div></td>
-				<td><div class="tooltip"><img src="media/image/no_video.png" class="ctrl-img" onClick="noVideo();" id="btn_random"/> <span class="tooltiptext">No Video</span></div></td>
 			  </tr>
 			</table>
 			
 			
 		</div>
 		
+		
   </body>
   
   <script>
   
 	var played_songs = [];
-	var played_videos = [];
   
 	var music_count = 0;
-	var video_count = 35;
 	var audio_player;
 	var player_info;
-	var video_interval;
 	var music_interval;
 	
 	var volume = 1;
 	var muted = false;
-	var no_video = false;
 	
 	var player_audio 	= document.getElementById("player_audio");
-	var player_video 	= document.getElementById("player_video");
 	var txt_interpret 	= document.getElementById("txt_interpret");
 	var txt_title 		= document.getElementById("txt_title");
 	var txt_video_name 	= document.getElementById("txt_video_name");  	
@@ -327,14 +302,8 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 		if(loadPlayerInfo()) {
 			initAnimation();
 		}
-		
-		
 	});
-	
-	$(document).on('input change', '#volumeRange', function() {
-		changeVolume($(this).val());
-	});;
-	
+		
 	function loadPlayerInfo(id) {
 		
 		if (typeof audio_player != 'undefined') {
@@ -373,26 +342,19 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 			var json_obj = JSON.parse(JSON.stringify(json));
 			player_info = {
 				audio_id: json_obj[0].audio_id,
-				video_id: json_obj[0].video_id,
-				video_path: json_obj[0].video_path,
 				sketch_path: json_obj[0].sketch_path,
 				audio_path: json_obj[0].audio_path,
-				timer_video: json_obj[0].timer_video,
 				timer_music: json_obj[0].timer_music,
 				music_link: json_obj[0].music_link,
-				video_link: json_obj[0].video_link,
 				music_name: json_obj[0].music_name,
-				video_name: json_obj[0].video_name,
-				music_count: json_obj[0].music_count,
-				video_count: json_obj[0].video_count
+				music_count: json_obj[0].music_count
 			}
 			music_count = player_info.music_count;
-			video_count = player_info.video_count;
-			
+						
 			var name_arr = player_info.music_name.split(" - ");
 			txt_interpret.innerHTML = name_arr[0];
 			txt_title.innerHTML = name_arr[1];
-			txt_video_name.innerHTML = player_info.video_name;
+	
 			
 			audio_player = new Audio("media/audio/" + player_info.audio_path);
 			
@@ -417,26 +379,11 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 				btn_mute.setAttribute('src', "media/image/unmuted.png");
 			}	
 			
-			if(no_video == false) {
-				player_video.setAttribute('src', "media/video/" + player_info.video_path);
-				if(player_info.timer_video <= player_info.timer_music) {
-					var timer_video_ms = player_info.timer_video * 1000;
-					video_interval = setInterval(changeVideo, timer_video_ms);
-				}
-				player_video.addEventListener("ended", function(){
-					 player_video.currentTime = 0;
-					 changeVideo();
-				});
-			}
+			
 			played_songs.push(player_info.audio_id);
-			played_videos.push(player_info.video_id);
-			playSong();
+			
 			
 			$("#music-title").fadeIn(10000);
-			if(no_video == false) {
-				$("#video-title").fadeIn(10000);
-				$("#video-title").fadeOut(10000);
-			}
 			
 			$("#music-title").fadeOut(10000);
 			
@@ -444,7 +391,6 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 			console.log("==============================");
 			console.log("Title: " + player_info.music_name)
 			console.log("Song Link: " + player_info.music_link);
-			console.log("Video Link: " + player_info.video_link);
 		});
 		return true;
 	}
@@ -477,12 +423,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 			playSong();
 		}
 	}
-	function noVideo() {
-		no_video = true;
-		player_video.pause();
-		player_video.setAttribute('src', ""); 
-		
-	}
+	
 	
 	function playSong() {
 		audio_player.play();
@@ -504,88 +445,12 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 			btn_mute.setAttribute('src', "media/image/muted.png");
 		}		
 	}
-	
-	function changeVolume(vol) {
-		volume = vol;
-		audio_player.volume = volume;
-		if(volume <= 0) {
-			btn_mute.setAttribute('src', "media/image/muted.png");
-			audio_player.muted = true;
-		} else {
-			btn_mute.setAttribute('src', "media/image/unmuted.png");
-			audio_player.muted = false;
-		}
-	}
-	
-	function changeVideo() {
 		
-		no_video = false;
-		var found = false;
-		var rand_id = getRandomInt(1, player_info.video_count);
-		var path = "request/video.php?id=" + rand_id;
-		if(played_videos.length >= video_count - 1) {
-			played_videos = [];
-		}
-				
-		do {
-			found = false;
-			rand_id = getRandomInt(1, player_info.video_count);
-			path = "request/video.php?id=" + rand_id;
-			
-			var i;
-			for (i = 0; i < played_videos.length; i++) { 
-				
-				if(rand_id == played_videos[i]) {found = true;}
-			}
-			
-		}while (found == true);
-		
-		
-		$.ajax({url: path}).done(function( json ) {
-			var json_obj = JSON.parse(JSON.stringify(json));
-			player_info = {
-				video_id: json_obj[0].video_id,
-				video_path: json_obj[0].video_path,
-				timer_video: json_obj[0].timer_video,
-				video_link: json_obj[0].video_link,
-				video_name: json_obj[0].video_name,
-				video_count: json_obj[0].video_count
-			}
-			video_count = player_info.video_count;
-
-			txt_video_name.innerHTML = player_info.video_name;
-		
-		});
-			
-		clearInterval(video_interval);
-		player_video.setAttribute('src', "media/video/" + player_info.video_path);
-		if(player_info.timer_video <= player_info.timer_music) {
-			var timer_video_ms = player_info.timer_video * 1000;
-			video_interval = setInterval(changeVideo, timer_video_ms);
-		}
-		player_video.addEventListener("ended", function(){
-			 player_video.currentTime = 0;
-			 changeVideo();
-		});
-		
-		played_videos.push(player_info.video_id);
-		player_video.pause();
-		player_video.load();
-		player_video.play();
-
-		$("#video-title").fadeIn(10000);
-		$("#video-title").fadeOut(10000);
-	}
-	
 	function openMusic() {
 		var win = window.open(player_info.music_link, '_blank');
 		win.focus();
 	}
 	
-	function openVideo() {
-		var win = window.open(player_info.video_link, '_blank');
-		win.focus();
-	}
 	
 	function switchBoxColor() {
 		$( "#music-title" ).animate({
@@ -597,23 +462,18 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 		$("#canvas").hide();
 		$("#content").hide();
 		$("#music-title").hide();
-		$("#video-title").hide();
 		$("#control").hide();
+		$("#control").fadeIn(5000);
 
 		
-		$("#control").fadeIn(5000);
-		
-		
-		$("#content-logo").fadeOut(5000);
+		$("#content-logo").fadeOut(10000);
 		$("#fade").fadeOut(15000);
 		
 		$("#canvas").fadeIn(20000);
 		$("#content").fadeIn(50000);
 		$("#music-title").fadeIn(30000);
-		$("#video-title").fadeIn(30000);
 		
 		$("#music-title").fadeOut(30000);
-		$("#video-title").fadeOut(30000);
 		$("#content").fadeOut(50000);
 	}
 	
