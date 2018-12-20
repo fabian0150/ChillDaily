@@ -63,11 +63,11 @@
 		  width: 300px;
 		  height: 300px;
 		  z-index: 15;
-		  top: 50%;
+		  top: 60%;
 		  left: 50%;
 		  margin: -100px 0 0 -150px;
 		  background: rgba(255, 0, 0, 0);
-		  
+		   text-align: center;
 		}
 		
 		.content-logo {
@@ -247,6 +247,12 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 			
 		</div>
 		
+		<div class="content" id="play-warning">
+			<h1>Please press <img src="media/image/play.png" class="ctrl-img" /> when using a iPhone</h1>
+			<p>iPhones don't allow autoplay and video backgrounds, even not after a song change!</p>
+			
+		</div>
+		
 		<div class="music-title" id="music-title" onClick="openMusic();">
 			<p>Playing now...</p>
 			<h1 id="txt_title"></h1>
@@ -269,7 +275,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 				<td><img src="media/image/play.png" class="ctrl-img"  onClick="startStopSong();" id="btn_stopPlay"/></td>
 				<td><img src="media/image/right.png" class="ctrl-img" onClick="changeSong(1);"/></td>
 				<td><img src="media/image/unmuted.png" class="ctrl-img" onClick="muteSong();" id="btn_mute"/></td>
-				<td><div class="tooltip"><img src="media/image/random.png" class="ctrl-img" onClick="loadPlayerInfo();" id="btn_random"/> 						<span class="tooltiptext">New Random Song</span></div></td>
+				<td><img src="media/image/random.png" class="ctrl-img" onClick="loadPlayerInfo();" id="btn_random"/></td>
 			  </tr>
 			</table>
 			
@@ -290,11 +296,11 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 	
 	var volume = 1;
 	var muted = false;
+	var sketches_allowed = false;
 	
 	var player_audio 	= document.getElementById("player_audio");
 	var txt_interpret 	= document.getElementById("txt_interpret");
-	var txt_title 		= document.getElementById("txt_title");
-	var txt_video_name 	= document.getElementById("txt_video_name");  	
+	var txt_title 		= document.getElementById("txt_title"); 	
 	 
 		
 	$( document ).ready(function() {
@@ -349,6 +355,11 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 				music_name: json_obj[0].music_name,
 				music_count: json_obj[0].music_count
 			}
+			if(player_info.audio_path == "") {
+				loadPlayerInfo(id);
+				return false;
+			}
+			
 			music_count = player_info.music_count;
 						
 			var name_arr = player_info.music_name.split(" - ");
@@ -356,6 +367,9 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 			txt_title.innerHTML = name_arr[1];
 	
 			
+			if (typeof audio_player != 'undefined') {
+				audio_player.pause();
+			}
 			audio_player = new Audio("media/audio/" + player_info.audio_path);
 			
 			audio_player.volume = volume;
@@ -365,10 +379,11 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 				 loadPlayerInfo();
 				 
 			});
-			
-			$.getScript("media/sketch/" + player_info.sketch_path, function() {
-			   //console.log("Sketch loaded: " + player_info.sketch_path);
-			});
+			if(sketches_allowed) {
+				$.getScript("media/sketch/" + player_info.sketch_path, function() {
+				   //console.log("Sketch loaded: " + player_info.sketch_path);
+				});
+			}
 		
 			var btn_mute 	= document.getElementById("btn_mute");
 			if(muted) {
@@ -379,12 +394,15 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 				btn_mute.setAttribute('src', "media/image/unmuted.png");
 			}	
 			
+			var btn_startStop 	= document.getElementById("btn_stopPlay");
+			btn_startStop.setAttribute('src', "media/image/play.png");	
 			
 			played_songs.push(player_info.audio_id);
 			
+			$("#play-warning").fadeIn(2000);
+			$("#play-warning").fadeOut(5000);
 			
 			$("#music-title").fadeIn(10000);
-			
 			$("#music-title").fadeOut(10000);
 			
 			
@@ -396,6 +414,8 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 	}
 	
 	function changeSong(way) {
+		var btn_startStop 	= document.getElementById("btn_stopPlay");
+		btn_startStop.setAttribute('src', "media/image/play.png");	
 		var id = parseInt(player_info.audio_id);
 		var new_id = id + parseInt(way);
 		
@@ -407,7 +427,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 		}
 		audio_player.pause();
 		loadPlayerInfo(new_id);
-		initAnimation();
+		
 	}
 	
 
@@ -460,11 +480,12 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 	
 	function initAnimation() {
 		$("#canvas").hide();
+		$("#play-warning").hide();
 		$("#content").hide();
 		$("#music-title").hide();
 		$("#control").hide();
 		$("#control").fadeIn(5000);
-
+		$("#play-warning").fadeIn(5000);
 		
 		$("#content-logo").fadeOut(10000);
 		$("#fade").fadeOut(15000);
@@ -472,7 +493,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 		$("#canvas").fadeIn(20000);
 		$("#content").fadeIn(50000);
 		$("#music-title").fadeIn(30000);
-		
+		$("#play-warning").fadeOut(10000);
 		$("#music-title").fadeOut(30000);
 		$("#content").fadeOut(50000);
 	}

@@ -314,6 +314,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 	var volume = 1;
 	var muted = false;
 	var no_video = false;
+	var sketches_allowed = false;
 	
 	var player_audio 	= document.getElementById("player_audio");
 	var player_video 	= document.getElementById("player_video");
@@ -336,7 +337,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 	});;
 	
 	function loadPlayerInfo(id) {
-		
+		try {
 		if (typeof audio_player != 'undefined') {
 			audio_player.pause();
 		}
@@ -356,7 +357,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 					found = false;
 					var rand_id = getRandomInt(1, player_info.music_count);
 					play_url =  "request/play.php?id=" + rand_id;
-					
+					console.log(play_url);
 					var i;
 					for (i = 0; i < played_songs.length; i++) { 
 						
@@ -386,6 +387,12 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 				music_count: json_obj[0].music_count,
 				video_count: json_obj[0].video_count
 			}
+			
+			if(player_info.audio_path == "") {
+				loadPlayerInfo(id);
+				return false;
+			}
+			
 			music_count = player_info.music_count;
 			video_count = player_info.video_count;
 			
@@ -393,6 +400,10 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 			txt_interpret.innerHTML = name_arr[0];
 			txt_title.innerHTML = name_arr[1];
 			txt_video_name.innerHTML = player_info.video_name;
+			
+			if (typeof audio_player != 'undefined') {
+				audio_player.pause();
+			}
 			
 			audio_player = new Audio("media/audio/" + player_info.audio_path);
 			
@@ -404,10 +415,11 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 				 
 			});
 			
-			$.getScript("media/sketch/" + player_info.sketch_path, function() {
-			   //console.log("Sketch loaded: " + player_info.sketch_path);
-			});
-		
+			if(sketches_allowed) {
+				$.getScript("media/sketch/" + player_info.sketch_path, function() {
+				   //console.log("Sketch loaded: " + player_info.sketch_path);
+				});
+			}
 			var btn_mute 	= document.getElementById("btn_mute");
 			if(muted) {
 				audio_player.muted = true;
@@ -420,6 +432,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 			if(no_video == false) {
 				player_video.setAttribute('src', "media/video/" + player_info.video_path);
 				if(player_info.timer_video <= player_info.timer_music) {
+					clearInterval(video_interval);
 					var timer_video_ms = player_info.timer_video * 1000;
 					video_interval = setInterval(changeVideo, timer_video_ms);
 				}
@@ -446,10 +459,17 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 			console.log("Song Link: " + player_info.music_link);
 			console.log("Video Link: " + player_info.video_link);
 		});
+		
+		} catch(err) {
+			console.log("error detected - reloading.");
+			location.reload();
+			return false;
+		}
 		return true;
 	}
 	
 	function changeSong(way) {
+		try {
 		var id = parseInt(player_info.audio_id);
 		var new_id = id + parseInt(way);
 		
@@ -462,6 +482,9 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 		audio_player.pause();
 		loadPlayerInfo(new_id);
 		initAnimation();
+		} catch(err) {
+			console.log("error detected - reloading.");
+		}
 	}
 	
 
@@ -518,63 +541,67 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 	}
 	
 	function changeVideo() {
-		
-		no_video = false;
-		var found = false;
-		var rand_id = getRandomInt(1, player_info.video_count);
-		var path = "request/video.php?id=" + rand_id;
-		if(played_videos.length >= video_count - 1) {
-			played_videos = [];
-		}
-				
-		do {
-			found = false;
-			rand_id = getRandomInt(1, player_info.video_count);
-			path = "request/video.php?id=" + rand_id;
-			
-			var i;
-			for (i = 0; i < played_videos.length; i++) { 
-				
-				if(rand_id == played_videos[i]) {found = true;}
+		try {
+			no_video = false;
+			var found = false;
+			var rand_id = getRandomInt(1, player_info.video_count);
+			var path = "request/video.php?id=" + rand_id;
+			if(played_videos.length >= video_count - 1) {
+				played_videos = [];
 			}
+					
+			do {
+				found = false;
+				rand_id = getRandomInt(1, player_info.video_count);
+				path = "request/video.php?id=" + rand_id;
+				
+				var i;
+				for (i = 0; i < played_videos.length; i++) { 
+					
+					if(rand_id == played_videos[i]) {found = true;}
+				}
+				
+			}while (found == true);
 			
-		}while (found == true);
-		
-		
-		$.ajax({url: path}).done(function( json ) {
-			var json_obj = JSON.parse(JSON.stringify(json));
-			player_info = {
-				video_id: json_obj[0].video_id,
-				video_path: json_obj[0].video_path,
-				timer_video: json_obj[0].timer_video,
-				video_link: json_obj[0].video_link,
-				video_name: json_obj[0].video_name,
-				video_count: json_obj[0].video_count
+			
+			$.ajax({url: path}).done(function( json ) {
+				var json_obj = JSON.parse(JSON.stringify(json));
+				player_info = {
+					video_id: json_obj[0].video_id,
+					video_path: json_obj[0].video_path,
+					timer_video: json_obj[0].timer_video,
+					video_link: json_obj[0].video_link,
+					video_name: json_obj[0].video_name,
+					video_count: json_obj[0].video_count
+				}
+				video_count = player_info.video_count;
+	
+				txt_video_name.innerHTML = json_obj[0].video_name;
+			
+			});
+				
+			clearInterval(video_interval);
+			player_video.setAttribute('src', "media/video/" + player_info.video_path);
+			if(player_info.timer_video <= player_info.timer_music) {
+				var timer_video_ms = player_info.timer_video * 1000;
+				video_interval = setInterval(changeVideo, timer_video_ms);
 			}
-			video_count = player_info.video_count;
-
-			txt_video_name.innerHTML = player_info.video_name;
-		
-		});
+			player_video.addEventListener("ended", function(){
+				 player_video.currentTime = 0;
+				 changeVideo();
+			});
 			
-		clearInterval(video_interval);
-		player_video.setAttribute('src', "media/video/" + player_info.video_path);
-		if(player_info.timer_video <= player_info.timer_music) {
-			var timer_video_ms = player_info.timer_video * 1000;
-			video_interval = setInterval(changeVideo, timer_video_ms);
+			played_videos.push(player_info.video_id);
+			player_video.pause();
+			player_video.load();
+			player_video.play();
+	
+			$("#video-title").fadeIn(10000);
+			$("#video-title").fadeOut(10000);
+		} catch(err) {
+			console.log("error detected - reloading.");
+			location.reload();
 		}
-		player_video.addEventListener("ended", function(){
-			 player_video.currentTime = 0;
-			 changeVideo();
-		});
-		
-		played_videos.push(player_info.video_id);
-		player_video.pause();
-		player_video.load();
-		player_video.play();
-
-		$("#video-title").fadeIn(10000);
-		$("#video-title").fadeOut(10000);
 	}
 	
 	function openMusic() {

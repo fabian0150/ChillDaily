@@ -285,8 +285,8 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 				
 				<td><img src="media/image/right.png" class="ctrl-img" onClick="changeSong(1);"/></td>
 				<td><img src="media/image/unmuted.png" class="ctrl-img" onClick="muteSong();" id="btn_mute"/></td>
-				<td><div class="tooltip"><img src="media/image/random.png" class="ctrl-img" onClick="loadPlayerInfo();" id="btn_random"/> <span class="tooltiptext">New Random Song</span></div></td>
-				<td><div class="tooltip"><img src="media/image/no_video.png" class="ctrl-img" onClick="noVideo();" id="btn_random"/> <span class="tooltiptext">No Video</span></div></td>
+				<td><img src="media/image/random.png" class="ctrl-img" onClick="loadPlayerInfo();" id="btn_random"/></td>
+				<td><img src="media/image/no_video.png" class="ctrl-img" onClick="noVideo();" id="btn_random"/></td>
 			  </tr>
 			</table>
 			
@@ -311,6 +311,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 	var volume = 1;
 	var muted = false;
 	var no_video = false;
+	var sketches_allowed = false;
 	
 	var player_audio 	= document.getElementById("player_audio");
 	var player_video 	= document.getElementById("player_video");
@@ -379,6 +380,10 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 				music_count: json_obj[0].music_count,
 				video_count: json_obj[0].video_count
 			}
+			if(player_info.audio_path == "") {
+				loadPlayerInfo(id);
+				return false;
+			}
 			music_count = player_info.music_count;
 			video_count = player_info.video_count;
 			
@@ -387,6 +392,10 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 			txt_title.innerHTML = name_arr[1];
 			txt_video_name.innerHTML = player_info.video_name;
 			
+			
+			if (typeof audio_player != 'undefined') {
+				audio_player.pause();
+			}
 			audio_player = new Audio("media/audio/" + player_info.audio_path);
 			
 			audio_player.volume = volume;
@@ -396,10 +405,11 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 				 loadPlayerInfo();
 				 
 			});
-			
-			$.getScript("media/sketch/" + player_info.sketch_path, function() {
-			   //console.log("Sketch loaded: " + player_info.sketch_path);
-			});
+			if(sketches_allowed) {
+				$.getScript("media/sketch/" + player_info.sketch_path, function() {
+				   //console.log("Sketch loaded: " + player_info.sketch_path);
+				});
+			}
 		
 			var btn_mute 	= document.getElementById("btn_mute");
 			if(muted) {
@@ -454,7 +464,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 		}
 		audio_player.pause();
 		loadPlayerInfo(new_id);
-		initAnimation();
+		
 	}
 	
 
@@ -535,7 +545,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 			}
 			video_count = player_info.video_count;
 
-			txt_video_name.innerHTML = player_info.video_name;
+			txt_video_name.innerHTML = json_obj[0].video_name;
 		
 		});
 			
