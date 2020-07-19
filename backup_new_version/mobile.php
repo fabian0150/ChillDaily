@@ -9,6 +9,10 @@
 		exit();
 	}
 	
+	if( $detect->isiOS() ){
+		header('Location: ios.php');
+		exit();
+	}
 ?>
 
 <!DOCTYPE html>
@@ -46,7 +50,14 @@
 			z-index: 3;
         }
 		
-		
+		#player_video {
+		  position: absolute;
+		  right: 0;
+		  bottom: 0;
+		  min-width: 100%; 
+		  min-height: 100%;
+		  z-index: 1;
+		}
 		
 		.blackout {
 			position:fixed;
@@ -63,11 +74,11 @@
 		  width: 300px;
 		  height: 300px;
 		  z-index: 15;
-		  top: 60%;
+		  top: 50%;
 		  left: 50%;
 		  margin: -100px 0 0 -150px;
 		  background: rgba(255, 0, 0, 0);
-		   text-align: center;
+		  
 		}
 		
 		.content-logo {
@@ -82,8 +93,7 @@
 		  background: rgba(255, 0, 0, 0);
 		  z-index: 26;
 		  
-		}
-		
+		}		
 		.music-title {
 			position:fixed;
 			top:50px;
@@ -247,12 +257,6 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 			
 		</div>
 		
-		<div class="content" id="play-warning">
-			<h1>Please press <img src="media/image/play.png" class="ctrl-img" /> when using a iPhone</h1>
-			<p>iPhones don't allow autoplay and video backgrounds, even not after a song change!</p>
-			
-		</div>
-		
 		<div class="music-title" id="music-title" onClick="openMusic();">
 			<p>Playing now...</p>
 			<h1 id="txt_title"></h1>
@@ -260,7 +264,10 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 			<h2 id="txt_interpret"></h2>
 		</div>
 		
-		
+		<div class="video-title" id="video-title" onClick="openVideo();">
+			<p>Video now...</p>
+			<h1 id="txt_video_name"></h1>
+		</div>
 		<div class="control" id="control">
 			<table id="control-table">
 			  <tr>
@@ -269,13 +276,17 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 				<th></th> 
 				<th></th>
 				<th></th>
+				<th></th>
 			  </tr>
 			 <tr> 
+				<td><div class="tooltip"><img src="media/image/video.png" class="ctrl-img"  onClick="changeVideo();" id="btn_video"/> <span class="tooltiptext">New Random Background</span></div></td>
 				<td><img src="media/image/left.png" class="ctrl-img" onClick="changeSong(-1);" /></td>
-				<td><img src="media/image/play.png" class="ctrl-img"  onClick="startStopSong();" id="btn_stopPlay"/></td>
+				<td><img src="media/image/pause.png" class="ctrl-img"  onClick="startStopSong();" id="btn_stopPlay"/></td>
+				
 				<td><img src="media/image/right.png" class="ctrl-img" onClick="changeSong(1);"/></td>
 				<td><img src="media/image/unmuted.png" class="ctrl-img" onClick="muteSong();" id="btn_mute"/></td>
-				<td><img src="media/image/random.png" class="ctrl-img" onClick="loadPlayerInfo();" id="btn_random"/></td>
+				<td><div class="tooltip"><img src="media/image/random.png" class="ctrl-img" onClick="loadPlayerInfo();" id="btn_random"/> <span class="tooltiptext">New Random Song</span></div></td>
+				<td><div class="tooltip"><img src="media/image/no_video.png" class="ctrl-img" onClick="noVideo();" id="btn_random"/> <span class="tooltiptext">No Video</span></div></td>
 			  </tr>
 			</table>
 			
@@ -288,19 +299,24 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
   <script>
   
 	var played_songs = [];
+	var played_videos = [];
   
 	var music_count = 0;
+	var video_count = 35;
 	var audio_player;
 	var player_info;
+	var video_interval;
 	var music_interval;
 	
 	var volume = 1;
 	var muted = false;
-	var sketches_allowed = false;
+	var no_video = false;
 	
 	var player_audio 	= document.getElementById("player_audio");
+	var player_video 	= document.getElementById("player_video");
 	var txt_interpret 	= document.getElementById("txt_interpret");
-	var txt_title 		= document.getElementById("txt_title"); 	
+	var txt_title 		= document.getElementById("txt_title");
+	var txt_video_name 	= document.getElementById("txt_video_name");  	
 	 
 		
 	$( document ).ready(function() {
@@ -308,6 +324,8 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 		if(loadPlayerInfo()) {
 			initAnimation();
 		}
+		
+		
 	});
 		
 	function loadPlayerInfo(id) {
@@ -348,28 +366,27 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 			var json_obj = JSON.parse(JSON.stringify(json));
 			player_info = {
 				audio_id: json_obj[0].audio_id,
+				video_id: json_obj[0].video_id,
+				video_path: json_obj[0].video_path,
 				sketch_path: json_obj[0].sketch_path,
 				audio_path: json_obj[0].audio_path,
+				timer_video: json_obj[0].timer_video,
 				timer_music: json_obj[0].timer_music,
 				music_link: json_obj[0].music_link,
+				video_link: json_obj[0].video_link,
 				music_name: json_obj[0].music_name,
-				music_count: json_obj[0].music_count
+				video_name: json_obj[0].video_name,
+				music_count: json_obj[0].music_count,
+				video_count: json_obj[0].video_count
 			}
-			if(player_info.audio_path == "") {
-				loadPlayerInfo(id);
-				return false;
-			}
-			
 			music_count = player_info.music_count;
-						
+			video_count = player_info.video_count;
+			
 			var name_arr = player_info.music_name.split(" - ");
 			txt_interpret.innerHTML = name_arr[0];
 			txt_title.innerHTML = name_arr[1];
-	
+			txt_video_name.innerHTML = player_info.video_name;
 			
-			if (typeof audio_player != 'undefined') {
-				audio_player.pause();
-			}
 			audio_player = new Audio("media/audio/" + player_info.audio_path);
 			
 			audio_player.volume = volume;
@@ -379,11 +396,10 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 				 loadPlayerInfo();
 				 
 			});
-			if(sketches_allowed) {
-				$.getScript("media/sketch/" + player_info.sketch_path, function() {
-				   //console.log("Sketch loaded: " + player_info.sketch_path);
-				});
-			}
+			
+			$.getScript("media/sketch/" + player_info.sketch_path, function() {
+			   //console.log("Sketch loaded: " + player_info.sketch_path);
+			});
 		
 			var btn_mute 	= document.getElementById("btn_mute");
 			if(muted) {
@@ -394,25 +410,39 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 				btn_mute.setAttribute('src', "media/image/unmuted.png");
 			}	
 			
-			var btn_startStop 	= document.getElementById("btn_stopPlay");
-			btn_startStop.setAttribute('src', "media/image/play.png");	
-			
+			if(no_video == false) {
+				player_video.setAttribute('src', "media/video/" + player_info.video_path);
+				if(player_info.timer_video <= player_info.timer_music) {
+					var timer_video_ms = player_info.timer_video * 1000;
+					video_interval = setInterval(changeVideo, timer_video_ms);
+				}
+				player_video.addEventListener("ended", function(){
+					 player_video.currentTime = 0;
+					 changeVideo();
+				});
+			}
 			played_songs.push(player_info.audio_id);
+			played_videos.push(player_info.video_id);
+			playSong();
 			
-			$("#play-warning").fadeIn(2000);
-			$("#play-warning").fadeOut(5000);
+			$("#music-title").fadeIn(10000);
+			if(no_video == false) {
+				$("#video-title").fadeIn(10000);
+				$("#video-title").fadeOut(10000);
+			}
+			
+			$("#music-title").fadeOut(10000);
 			
 			
 			console.log("==============================");
 			console.log("Title: " + player_info.music_name)
 			console.log("Song Link: " + player_info.music_link);
+			console.log("Video Link: " + player_info.video_link);
 		});
 		return true;
 	}
 	
 	function changeSong(way) {
-		var btn_startStop 	= document.getElementById("btn_stopPlay");
-		btn_startStop.setAttribute('src', "media/image/play.png");	
 		var id = parseInt(player_info.audio_id);
 		var new_id = id + parseInt(way);
 		
@@ -424,12 +454,14 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 		}
 		audio_player.pause();
 		loadPlayerInfo(new_id);
-		
+		initAnimation();
 	}
 	
 
 	function startStopSong() {
 		var btn_startStop 	= document.getElementById("btn_stopPlay");
+		$("#music-title").fadeIn(10000);
+		$("#music-title").fadeOut(10000);
 		if (!audio_player.paused) { //if is playing
 			btn_startStop.setAttribute('src', "media/image/play.png");	
 			pauseSong();
@@ -438,7 +470,12 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 			playSong();
 		}
 	}
-	
+	function noVideo() {
+		no_video = true;
+		player_video.pause();
+		player_video.setAttribute('src', ""); 
+		
+	}
 	
 	function playSong() {
 		audio_player.play();
@@ -460,12 +497,77 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 			btn_mute.setAttribute('src', "media/image/muted.png");
 		}		
 	}
+	
+	
+	function changeVideo() {
 		
+		no_video = false;
+		var found = false;
+		var rand_id = getRandomInt(1, player_info.video_count);
+		var path = "request/video.php?id=" + rand_id;
+		if(played_videos.length >= video_count - 1) {
+			played_videos = [];
+		}
+				
+		do {
+			found = false;
+			rand_id = getRandomInt(1, player_info.video_count);
+			path = "request/video.php?id=" + rand_id;
+			
+			var i;
+			for (i = 0; i < played_videos.length; i++) { 
+				
+				if(rand_id == played_videos[i]) {found = true;}
+			}
+			
+		}while (found == true);
+		
+		
+		$.ajax({url: path}).done(function( json ) {
+			var json_obj = JSON.parse(JSON.stringify(json));
+			player_info = {
+				video_id: json_obj[0].video_id,
+				video_path: json_obj[0].video_path,
+				timer_video: json_obj[0].timer_video,
+				video_link: json_obj[0].video_link,
+				video_name: json_obj[0].video_name,
+				video_count: json_obj[0].video_count
+			}
+			video_count = player_info.video_count;
+
+			txt_video_name.innerHTML = json_obj[0].video_name;
+		
+		});
+			
+		clearInterval(video_interval);
+		player_video.setAttribute('src', "media/video/" + player_info.video_path);
+		if(player_info.timer_video <= player_info.timer_music) {
+			var timer_video_ms = player_info.timer_video * 1000;
+			video_interval = setInterval(changeVideo, timer_video_ms);
+		}
+		player_video.addEventListener("ended", function(){
+			 player_video.currentTime = 0;
+			 changeVideo();
+		});
+		
+		played_videos.push(player_info.video_id);
+		player_video.pause();
+		player_video.load();
+		player_video.play();
+
+		$("#video-title").fadeIn(10000);
+		$("#video-title").fadeOut(10000);
+	}
+	
 	function openMusic() {
 		var win = window.open(player_info.music_link, '_blank');
 		win.focus();
 	}
 	
+	function openVideo() {
+		var win = window.open(player_info.video_link, '_blank');
+		win.focus();
+	}
 	
 	function switchBoxColor() {
 		$( "#music-title" ).animate({
@@ -475,19 +577,23 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', end
 	
 	function initAnimation() {
 		$("#canvas").hide();
-		$("#play-warning").hide();
 		$("#content").hide();
 		$("#music-title").hide();
+		$("#video-title").hide();
 		$("#control").hide();
 		$("#control").fadeIn(5000);
-		$("#play-warning").fadeIn(5000);
+
 		
 		$("#content-logo").fadeOut(10000);
 		$("#fade").fadeOut(15000);
+		
 		$("#canvas").fadeIn(20000);
 		$("#content").fadeIn(50000);
 		$("#music-title").fadeIn(30000);
-		$("#play-warning").fadeOut(10000);
+		$("#video-title").fadeIn(30000);
+		
+		$("#music-title").fadeOut(30000);
+		$("#video-title").fadeOut(30000);
 		$("#content").fadeOut(50000);
 	}
 	
